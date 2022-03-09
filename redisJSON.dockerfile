@@ -4,7 +4,7 @@
 #----------------------------------------------------------------------------------------------
 # Versions
 ARG KEY_DB_VERSION=v6.2.2
-ARG REDISJSON_VERSION=v1.0.4
+ARG REDISJSON_VERSION=v2.0.6
 
 ARG BUILD_BIN=/build/bin
 #----------------------------------------------------------------------------------------------
@@ -31,6 +31,13 @@ RUN mkdir -p redisjson && \
     cp rejson.so ${BUILD_BIN}/ && \
     ls -ltr ${BUILD_BIN}
 
+# RediSearch
+RUN git clone -b ${REDISEARCH_VERSION} --recursive https://github.com/RediSearch/RediSearch.git && \
+    cd RediSearch && \
+    make build && \
+    cp src/redisearch.so ${BUILD_BIN}/ && \
+    ls -ltr ${BUILD_BIN}
+
 #----------------------------------------------------------------------------------------------
 # Build KeyDB Image with RedisJSON module
 FROM eqalpha/keydb:x86_64_${KEY_DB_VERSION}
@@ -44,4 +51,5 @@ COPY --from=builder ${BUILD_BIN}/* ${LIBDIR}/
 
 CMD [ "keydb-server", \
     "/etc/keydb/keydb.conf", \
-    "--loadmodule", "/usr/lib/redis/modules/rejson.so" ]
+    "--loadmodule", "/usr/lib/redis/modules/rejson.so",  \
+    "--loadmodule", "/usr/lib/redis/modules/redisearch.so" ]
